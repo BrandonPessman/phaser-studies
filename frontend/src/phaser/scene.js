@@ -27,8 +27,8 @@ class playGame extends Phaser.Scene {
     this.dots = this.physics.add.group()
 
     // Connecting the socket
-    // this.socket = io('http://165.227.115.42:3000/')
-    this.socket = io('localhost:3000')
+    this.socket = io('http://165.227.115.42:3000/')
+    // this.socket = io('localhost:3000')
 
     // Player Setup
     this.socket.on('currentPlayers', players => {
@@ -52,6 +52,14 @@ class playGame extends Phaser.Scene {
         if (playerInfo.playerId === otherPlayer.playerId) {
           otherPlayer.setRotation(playerInfo.rotation)
           otherPlayer.setPosition(playerInfo.x, playerInfo.y)
+        }
+      })
+    })
+
+    this.socket.on('playerCollectedDot', info => {
+      this.dots.children.each(function (dot) {
+        if (info.x == dot.x && info.y == dot.y) {
+          dot.destroy()
         }
       })
     })

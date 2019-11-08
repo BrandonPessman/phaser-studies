@@ -66,6 +66,9 @@ io.on('connection', function (socket) {
     for (let i = 0; i < dots.length; i++) {
       if (dots[i].x == dot.x && dots[i].y == dot.y) {
         dots.splice(i, 1)
+
+        // Send Dot that was removed
+        socket.broadcast.emit('playerCollectedDot', dot)
       }
     }
   })
