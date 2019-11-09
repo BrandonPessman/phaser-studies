@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import playerImage from '../assets/square-blue.png'
-import otherPlayerImage from '../assets/square-red.png'
+import playerImage from '../assets/sprites/Player01.png'
+import otherPlayerImage from '../assets/sprites/Player01.png'
 import dotImage from '../assets/Ecu.png'
 import mappyData from '../assets/maps/map.json'
 import tilesetImage from '../assets/tilesets/terrain_shapestorm-extruded.png'
@@ -37,8 +37,7 @@ class playGame extends Phaser.Scene {
 
     // Connecting the socket
     this.socket = io('http://165.227.115.42:3000/')
-    
-    // this.socket = io('localhost:3000')
+    //this.socket = io('localhost:3000')
 
     // Player Setup
     this.socket.on('currentPlayers', players => {
@@ -62,7 +61,7 @@ class playGame extends Phaser.Scene {
             offsetX: 1,
             offsetY: 1,
             color: '#000',
-            blur: 0,
+            blur: 1,
             stroke: true,
             fill: true
         },});
@@ -162,7 +161,7 @@ function addPlayer (playerInfo) {
   this.player.setCollideWorldBounds(true)
   // Camera Setup
   var camera = this.cameras.main
-  camera.zoom = 2
+  camera.zoom = 3
   camera.startFollow(this.player)
   camera.roundPixels = true;
 
