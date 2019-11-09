@@ -25,6 +25,7 @@ class playGame extends Phaser.Scene {
   }
 
   create () {
+    
    // Setting up Input Listening
     this.cursors = this.input.keyboard.createCursorKeys()
 
@@ -45,6 +46,7 @@ class playGame extends Phaser.Scene {
         if (players[id].playerId === this.socket.id) {
           addPlayer.call(this, players[id])
 
+          // Setting up Terrain
           let mappy = this.add.tilemap('mappy')
 
           let terrain = mappy.addTilesetImage("terrain_shapestorm-extruded", "terrain")
@@ -54,6 +56,18 @@ class playGame extends Phaser.Scene {
           this.physics.add.collider(this.player, terrainLayer);
 
           terrainLayer.setCollisionByProperty({collides: true})
+
+          this.playerChatText = this.add.text(16, 16, '', { fontSize: 'bold 12px Arial', fill: '#000'});
+          this.playerNameText = this.add.text(16, 16, 'Braymen (No Guild)', { fontSize: 'bold 12px Arial', fill: '#fff', shadow: {
+            offsetX: 1,
+            offsetY: 1,
+            color: '#000',
+            blur: 0,
+            stroke: true,
+            fill: true
+        },});
+ 
+          updatePlayerName.call(this)
         } else {
           addAnotherPlayer.call(this, players[id])
         }
@@ -123,7 +137,18 @@ class playGame extends Phaser.Scene {
       this.player.body.setVelocityY(80)
       sendPlayerMovement.call(this)
     }
+
+
   }
+}
+
+function updatePlayerName() {
+      // Update Name Text
+      this.playerChatText.setX(this.player.x - (this.playerChatText.width / 2.0))
+      this.playerChatText.setY(this.player.y - 30)
+
+      this.playerNameText.setX(this.player.x - (this.playerNameText.width / 2.0))
+      this.playerNameText.setY(this.player.y + 20)
 }
 
 function addAnotherPlayer (playerInfo) {
@@ -140,9 +165,12 @@ function addPlayer (playerInfo) {
   camera.zoom = 2
   camera.startFollow(this.player)
   camera.roundPixels = true;
+
+  camera.fadeIn(2000);
 }
 
 function sendPlayerMovement () {
+  updatePlayerName.call(this)
   this.socket.emit('playerMovement', {
     x: this.player.x,
     y: this.player.y,
