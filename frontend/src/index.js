@@ -9,14 +9,14 @@ import playGame from './phaser/scene'
 export const config = {
   type: Phaser.AUTO,
   parent: 'phaser',
-  width: 800,
-  height: 600,
+  width: '100%',
+  height: '100%',
   scene: playGame,
   pixelArt: true,
   physics: {
     default: 'arcade',
     arcade: {
-      debug: true
+      debug: false
     }
   }
 }

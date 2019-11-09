@@ -1,7 +1,9 @@
 import Phaser from 'phaser'
 import playerImage from '../assets/square-blue.png'
 import otherPlayerImage from '../assets/square-red.png'
-import dotImage from '../assets/circle-yellow.png'
+import dotImage from '../assets/Ecu.png'
+import mappyData from '../assets/maps/map.json'
+import tilesetImage from '../assets/tilesets/terrain_shapestorm-extruded.png'
 
 import io from 'socket.io-client'
 
@@ -14,10 +16,16 @@ class playGame extends Phaser.Scene {
     this.load.image('player', playerImage)
     this.load.image('otherPlayer', otherPlayerImage)
     this.load.image('dot', dotImage)
+
+    // Load Map Data
+    this.load.tilemapTiledJSON('mappy', mappyData)
+    
+    // Load Map Tileset
+    this.load.image("terrain", tilesetImage)
   }
 
   create () {
-    // Setting up Input Listening
+   // Setting up Input Listening
     this.cursors = this.input.keyboard.createCursorKeys()
 
     // Group of other Players
@@ -28,6 +36,7 @@ class playGame extends Phaser.Scene {
 
     // Connecting the socket
     this.socket = io('http://165.227.115.42:3000/')
+    
     // this.socket = io('localhost:3000')
 
     // Player Setup
@@ -35,6 +44,16 @@ class playGame extends Phaser.Scene {
       Object.keys(players).forEach(id => {
         if (players[id].playerId === this.socket.id) {
           addPlayer.call(this, players[id])
+
+          let mappy = this.add.tilemap('mappy')
+
+          let terrain = mappy.addTilesetImage("terrain_shapestorm-extruded", "terrain")
+      
+          let terrainLayer = mappy.createStaticLayer("Tile Layer 1", [terrain], 0, 0).setDepth(-1)
+          
+          this.physics.add.collider(this.player, terrainLayer);
+
+          terrainLayer.setCollisionByProperty({collides: true})
         } else {
           addAnotherPlayer.call(this, players[id])
         }
@@ -115,6 +134,12 @@ function addAnotherPlayer (playerInfo) {
 
 function addPlayer (playerInfo) {
   this.player = this.physics.add.sprite(playerInfo.x, playerInfo.y, 'player')
+  this.player.setCollideWorldBounds(true)
+  // Camera Setup
+  var camera = this.cameras.main
+  camera.zoom = 2
+  camera.startFollow(this.player)
+  camera.roundPixels = true;
 }
 
 function sendPlayerMovement () {
