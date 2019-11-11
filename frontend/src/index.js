@@ -12,7 +12,7 @@ export const config = {
   width: '100%',
   height: '100%',
   scene: playGame,
-  pixelArt: true,
+  pixelArt: false,
   physics: {
     default: 'arcade',
     arcade: {

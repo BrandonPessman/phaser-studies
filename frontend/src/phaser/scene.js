@@ -25,8 +25,12 @@ class playGame extends Phaser.Scene {
   }
 
   create () {
+    // Global Variables
+    this.acceleration = 5;
+    this.deceleration = 1;
+    this.maxSpeed = 120;
     
-   // Setting up Input Listening
+    // Setting up Input Listening
     this.cursors = this.input.keyboard.createCursorKeys()
 
     // Group of other Players
@@ -57,14 +61,7 @@ class playGame extends Phaser.Scene {
           terrainLayer.setCollisionByProperty({collides: true})
 
           this.playerChatText = this.add.text(16, 16, '', { fontSize: 'bold 12px Arial', fill: '#000'});
-          this.playerNameText = this.add.text(16, 16, 'Braymen (No Guild)', { fontSize: 'bold 12px Arial', fill: '#fff', shadow: {
-            offsetX: 1,
-            offsetY: 1,
-            color: '#000',
-            blur: 1,
-            stroke: true,
-            fill: true
-        },});
+          this.playerNameText = this.add.text(16, 16, 'Braymen', { fontSize: 'bold 16px Arial', fill: '#000'});
  
           updatePlayerName.call(this)
         } else {
@@ -116,24 +113,41 @@ class playGame extends Phaser.Scene {
   update () {
     // Velocity Reset
     if (this.player != null) {
-      this.player.body.setVelocity(0)
-    }
+      //this.player.body.setVelocity(this.player.body - 10)
+      if (this.player.body.velocity.x > 0) {
+        this.player.body.setVelocityX(Math.max(this.player.body.velocity.x - this.deceleration, 0))
+      } else if (this.player.body.velocity.x < 0) {
+        this.player.body.setVelocityX(Math.min(this.player.body.velocity.x + this.deceleration, 0))
+      }
+
+      if (this.player.body.velocity.y > 0) {
+        this.player.body.setVelocityY(Math.max(this.player.body.velocity.y - this.deceleration, 0))
+      } else if (this.player.body.velocity.y < 0) {
+        this.player.body.setVelocityY(Math.min(this.player.body.velocity.y + this.deceleration, 0))
+      }
+
+      var rad = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.game.input.mousePointer.worldX, this.game.input.mousePointer.worldY)
+      var deg = rad * (180/Math.PI)
+      rotateTowardsMouse.call(this, deg)
+      updatePlayerName.call(this)
+  }
 
     // Horizontal movement
     if (this.cursors.left.isDown) {
-      this.player.body.setVelocityX(-80)
+      this.player.body.setVelocityX(Math.max(this.player.body.velocity.x - this.acceleration, -this.maxSpeed))
       sendPlayerMovement.call(this)
     } else if (this.cursors.right.isDown) {
-      this.player.body.setVelocityX(80)
+      this.player.body.setVelocityX(Math.min(this.player.body.velocity.x + this.acceleration, this.maxSpeed))
       sendPlayerMovement.call(this)
     }
 
     // Vertical movement
     if (this.cursors.up.isDown) {
-      this.player.body.setVelocityY(-80)
+      
+      this.player.body.setVelocityY(Math.max(this.player.body.velocity.y - this.acceleration, -this.maxSpeed))
       sendPlayerMovement.call(this)
     } else if (this.cursors.down.isDown) {
-      this.player.body.setVelocityY(80)
+      this.player.body.setVelocityY(Math.min(this.player.body.velocity.y + this.acceleration, this.maxSpeed))
       sendPlayerMovement.call(this)
     }
 
@@ -158,14 +172,16 @@ function addAnotherPlayer (playerInfo) {
 
 function addPlayer (playerInfo) {
   this.player = this.physics.add.sprite(playerInfo.x, playerInfo.y, 'player')
-  this.player.setCollideWorldBounds(true)
+  //this.player.setCollideWorldBounds(true)
   // Camera Setup
   var camera = this.cameras.main
-  camera.zoom = 3
+  camera.zoom = 1
   camera.startFollow(this.player)
   camera.roundPixels = true;
 
   camera.fadeIn(2000);
+
+  this.player.setOrigin(.3, .5)
 }
 
 function sendPlayerMovement () {
@@ -184,10 +200,13 @@ function addNewDot (dot) {
 
   // Adds collision between player and dots
   this.physics.add.collider(this.player, this.dots, (player, dot) => {
-    console.log(dot)
     this.socket.emit('removeDot', dot)
     dot.destroy()
   })
+}
+
+function rotateTowardsMouse (deg) {
+  this.player.angle = deg;
 }
 
 export default playGame
