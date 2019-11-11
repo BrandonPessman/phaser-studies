@@ -1,9 +1,9 @@
 import Phaser from 'phaser'
-import playerImage from '../assets/sprites/Player01.png'
-import otherPlayerImage from '../assets/sprites/Player01.png'
-import dotImage from '../assets/Ecu.png'
-import mappyData from '../assets/maps/map.json'
-import tilesetImage from '../assets/tilesets/terrain_shapestorm-extruded.png'
+import playerImage from '../assets/sprites/player.png'
+import otherPlayerImage from '../assets/sprites/enemy.png'
+import dotImage from '../assets/sprites/square_point.png'
+import mappyData from '../assets/tiled/map.json'
+import tilesetImage from '../assets/tileset/tileset-extruded.png'
 
 import io from 'socket.io-client'
 
@@ -48,7 +48,7 @@ class playGame extends Phaser.Scene {
           // Setting up Terrain
           let mappy = this.add.tilemap('mappy')
 
-          let terrain = mappy.addTilesetImage("terrain_shapestorm-extruded", "terrain")
+          let terrain = mappy.addTilesetImage("tileset-extruded", "terrain")
       
           let terrainLayer = mappy.createStaticLayer("Tile Layer 1", [terrain], 0, 0).setDepth(-1)
           
