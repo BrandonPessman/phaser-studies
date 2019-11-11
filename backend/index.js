@@ -14,8 +14,8 @@ setInterval(() => {
   if (dots.length < MAX_DOTS) {
     var dot = {
       id: counter,
-      x: Math.floor(Math.random() * 400) + 50,
-      y: Math.floor(Math.random() * 500) + 50
+      x: Math.floor(Math.random() * 20 * 14) + 20,
+      y: Math.floor(Math.random() * 20 * 14) + 20
     }
 
     dots.push(dot)
@@ -30,8 +30,9 @@ io.on('connection', function (socket) {
 
   // Create a New Player and Add it
   players[socket.id] = {
-    x: Math.floor(Math.random() * 400) + 50,
-    y: Math.floor(Math.random() * 500) + 50,
+    x: Math.floor(Math.random() * 20 * 14) + 20,
+    y: Math.floor(Math.random() * 20 * 14) + 20,
+    rotation: 0,
     playerId: socket.id
   }
 
@@ -56,6 +57,7 @@ io.on('connection', function (socket) {
   socket.on('playerMovement', function (movementData) {
     players[socket.id].x = movementData.x
     players[socket.id].y = movementData.y
+    players[socket.id].rotation = movementData.rotation
     players[socket.id].flipX = movementData.flipX
 
     // Tell all Players a Player Moved

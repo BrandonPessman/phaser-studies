@@ -4,6 +4,7 @@ import otherPlayerImage from '../assets/sprites/enemy.png'
 import dotImage from '../assets/sprites/square_point.png'
 import mappyData from '../assets/tiled/map.json'
 import tilesetImage from '../assets/tileset/tileset-extruded.png'
+import playerBulletImage from '../assets/sprites/player_bullet.png'
 
 import io from 'socket.io-client'
 
@@ -16,20 +17,27 @@ class playGame extends Phaser.Scene {
     this.load.image('player', playerImage)
     this.load.image('otherPlayer', otherPlayerImage)
     this.load.image('dot', dotImage)
+    this.load.image('playerBullet', playerBulletImage)
 
     // Load Map Data
     this.load.tilemapTiledJSON('mappy', mappyData)
-    
+
     // Load Map Tileset
-    this.load.image("terrain", tilesetImage)
+    this.load.image('terrain', tilesetImage)
   }
 
   create () {
     // Global Variables
-    this.acceleration = 5;
-    this.deceleration = 1;
-    this.maxSpeed = 120;
-    
+    this.acceleration = 5
+    this.deceleration = 1
+    this.maxSpeed = 120
+
+    // Keylisteners
+    this.wKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
+    this.sKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S)
+    this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
+    this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
+
     // Setting up Input Listening
     this.cursors = this.input.keyboard.createCursorKeys()
 
@@ -52,17 +60,25 @@ class playGame extends Phaser.Scene {
           // Setting up Terrain
           let mappy = this.add.tilemap('mappy')
 
-          let terrain = mappy.addTilesetImage("tileset-extruded", "terrain")
-      
-          let terrainLayer = mappy.createStaticLayer("Tile Layer 1", [terrain], 0, 0).setDepth(-1)
-          
-          this.physics.add.collider(this.player, terrainLayer);
+          let terrain = mappy.addTilesetImage('tileset-extruded', 'terrain')
 
-          terrainLayer.setCollisionByProperty({collides: true})
+          let terrainLayer = mappy
+            .createStaticLayer('Tile Layer 1', [terrain], 0, 0)
+            .setDepth(-1)
 
-          this.playerChatText = this.add.text(16, 16, '', { fontSize: 'bold 12px Arial', fill: '#000'});
-          this.playerNameText = this.add.text(16, 16, 'Braymen', { fontSize: 'bold 16px Arial', fill: '#000'});
- 
+          this.physics.add.collider(this.player, terrainLayer)
+
+          terrainLayer.setCollisionByProperty({ collides: true })
+
+          this.playerChatText = this.add.text(16, 16, '', {
+            fontSize: 'bold 12px Arial',
+            fill: '#000'
+          })
+          this.playerNameText = this.add.text(16, 16, 'Braymen', {
+            fontSize: 'bold 16px Arial',
+            fill: '#000'
+          })
+
           updatePlayerName.call(this)
         } else {
           addAnotherPlayer.call(this, players[id])
@@ -79,7 +95,7 @@ class playGame extends Phaser.Scene {
     this.socket.on('playerMoved', playerInfo => {
       this.otherPlayers.children.each(function (otherPlayer) {
         if (playerInfo.playerId === otherPlayer.playerId) {
-          otherPlayer.setRotation(playerInfo.rotation)
+          otherPlayer.angle = playerInfo.rotation
           otherPlayer.setPosition(playerInfo.x, playerInfo.y)
         }
       })
@@ -113,75 +129,104 @@ class playGame extends Phaser.Scene {
   update () {
     // Velocity Reset
     if (this.player != null) {
-      //this.player.body.setVelocity(this.player.body - 10)
+      // this.player.body.setVelocity(this.player.body - 10)
       if (this.player.body.velocity.x > 0) {
-        this.player.body.setVelocityX(Math.max(this.player.body.velocity.x - this.deceleration, 0))
+        this.player.body.setVelocityX(
+          Math.max(this.player.body.velocity.x - this.deceleration, 0)
+        )
       } else if (this.player.body.velocity.x < 0) {
-        this.player.body.setVelocityX(Math.min(this.player.body.velocity.x + this.deceleration, 0))
+        this.player.body.setVelocityX(
+          Math.min(this.player.body.velocity.x + this.deceleration, 0)
+        )
       }
 
       if (this.player.body.velocity.y > 0) {
-        this.player.body.setVelocityY(Math.max(this.player.body.velocity.y - this.deceleration, 0))
+        this.player.body.setVelocityY(
+          Math.max(this.player.body.velocity.y - this.deceleration, 0)
+        )
       } else if (this.player.body.velocity.y < 0) {
-        this.player.body.setVelocityY(Math.min(this.player.body.velocity.y + this.deceleration, 0))
+        this.player.body.setVelocityY(
+          Math.min(this.player.body.velocity.y + this.deceleration, 0)
+        )
       }
 
-      var rad = Phaser.Math.Angle.Between(this.player.x, this.player.y, this.game.input.mousePointer.worldX, this.game.input.mousePointer.worldY)
-      var deg = rad * (180/Math.PI)
+      var rad = Phaser.Math.Angle.Between(
+        this.player.x,
+        this.player.y,
+        this.game.input.mousePointer.worldX,
+        this.game.input.mousePointer.worldY
+      )
+      var deg = rad * (180 / Math.PI)
       rotateTowardsMouse.call(this, deg)
       updatePlayerName.call(this)
-  }
+    }
 
     // Horizontal movement
-    if (this.cursors.left.isDown) {
-      this.player.body.setVelocityX(Math.max(this.player.body.velocity.x - this.acceleration, -this.maxSpeed))
+    if (this.aKey.isDown) {
+      this.player.body.setVelocityX(
+        Math.max(
+          this.player.body.velocity.x - this.acceleration,
+          -this.maxSpeed
+        )
+      )
       sendPlayerMovement.call(this)
-    } else if (this.cursors.right.isDown) {
-      this.player.body.setVelocityX(Math.min(this.player.body.velocity.x + this.acceleration, this.maxSpeed))
+    } else if (this.dKey.isDown) {
+      this.player.body.setVelocityX(
+        Math.min(this.player.body.velocity.x + this.acceleration, this.maxSpeed)
+      )
       sendPlayerMovement.call(this)
     }
 
     // Vertical movement
-    if (this.cursors.up.isDown) {
-      
-      this.player.body.setVelocityY(Math.max(this.player.body.velocity.y - this.acceleration, -this.maxSpeed))
+    if (this.wKey.isDown) {
+      this.player.body.setVelocityY(
+        Math.max(
+          this.player.body.velocity.y - this.acceleration,
+          -this.maxSpeed
+        )
+      )
       sendPlayerMovement.call(this)
-    } else if (this.cursors.down.isDown) {
-      this.player.body.setVelocityY(Math.min(this.player.body.velocity.y + this.acceleration, this.maxSpeed))
+    } else if (this.sKey.isDown) {
+      this.player.body.setVelocityY(
+        Math.min(this.player.body.velocity.y + this.acceleration, this.maxSpeed)
+      )
       sendPlayerMovement.call(this)
     }
 
-
+    if (this.cursors.space.isDown) {
+      // addPlayerBullet.call(this, 1)
+    }
   }
 }
 
-function updatePlayerName() {
-      // Update Name Text
-      this.playerChatText.setX(this.player.x - (this.playerChatText.width / 2.0))
-      this.playerChatText.setY(this.player.y - 30)
+function updatePlayerName () {
+  // Update Name Text
+  this.playerChatText.setX(this.player.x - this.playerChatText.width / 2.0)
+  this.playerChatText.setY(this.player.y - 30)
 
-      this.playerNameText.setX(this.player.x - (this.playerNameText.width / 2.0))
-      this.playerNameText.setY(this.player.y + 20)
+  this.playerNameText.setX(this.player.x - this.playerNameText.width / 2.0)
+  this.playerNameText.setY(this.player.y + 20)
 }
 
 function addAnotherPlayer (playerInfo) {
   const otherPlayer = this.add.sprite(playerInfo.x, playerInfo.y, 'otherPlayer')
+  otherPlayer.angle = playerInfo.rotation
   otherPlayer.playerId = playerInfo.playerId
   this.otherPlayers.add(otherPlayer)
 }
 
 function addPlayer (playerInfo) {
   this.player = this.physics.add.sprite(playerInfo.x, playerInfo.y, 'player')
-  //this.player.setCollideWorldBounds(true)
+  // this.player.setCollideWorldBounds(true)
   // Camera Setup
   var camera = this.cameras.main
   camera.zoom = 1
   camera.startFollow(this.player)
-  camera.roundPixels = true;
+  camera.roundPixels = true
 
-  camera.fadeIn(2000);
+  camera.fadeIn(2000)
 
-  this.player.setOrigin(.3, .5)
+  this.player.setOrigin(0.3, 0.5)
 }
 
 function sendPlayerMovement () {
@@ -189,7 +234,7 @@ function sendPlayerMovement () {
   this.socket.emit('playerMovement', {
     x: this.player.x,
     y: this.player.y,
-    rotation: this.player.rotation
+    rotation: this.player.angle
   })
 }
 
@@ -206,7 +251,22 @@ function addNewDot (dot) {
 }
 
 function rotateTowardsMouse (deg) {
-  this.player.angle = deg;
+  this.player.angle = deg
+  sendPlayerMovement.call(this)
+}
+
+function addPlayerBullet () {
+  var bullet = this.physics.add
+    .sprite(this.player.x, this.player.y, 'playerBullet')
+    .setDepth(-1)
+
+  this.physics.moveTo(
+    bullet,
+    this.game.input.mousePointer.worldX,
+    this.game.input.mousePointer.worldY,
+    null,
+    1000
+  )
 }
 
 export default playGame
