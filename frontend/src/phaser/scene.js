@@ -8,6 +8,10 @@ import playerBulletImage from '../assets/sprites/player_bullet.png'
 
 import io from 'socket.io-client'
 
+const Player = require('./helper/Player')
+const Experience = require('./helper/Experience')
+const Movement = require('./helper/Movement')
+
 class playGame extends Phaser.Scene {
   constructor () {
     super('PlayGame')
@@ -48,14 +52,14 @@ class playGame extends Phaser.Scene {
     this.dots = this.physics.add.group()
 
     // Connecting the socket
-    this.socket = io('http://165.227.115.42:3000/')
-    //this.socket = io('localhost:3000')
+    // this.socket = io('http://165.227.115.42:3000/')
+    this.socket = io('localhost:3000')
 
     // Player Setup
     this.socket.on('currentPlayers', players => {
       Object.keys(players).forEach(id => {
         if (players[id].playerId === this.socket.id) {
-          addPlayer.call(this, players[id])
+          Player.addPlayer.call(this, players[id])
 
           // Setting up Terrain
           let mappy = this.add.tilemap('mappy')
@@ -79,16 +83,16 @@ class playGame extends Phaser.Scene {
             fill: '#000'
           })
 
-          updatePlayerName.call(this)
+          Player.updatePlayerName.call(this)
         } else {
-          addAnotherPlayer.call(this, players[id])
+          Player.addAnotherPlayer.call(this, players[id])
         }
       })
     })
 
     this.socket.on('currentDots', dots => {
       dots.forEach(dot => {
-        addNewDot.call(this, dot)
+        Experience.addNewDot.call(this, dot)
       })
     })
 
@@ -110,7 +114,7 @@ class playGame extends Phaser.Scene {
     })
 
     this.socket.on('newPlayer', playerInfo => {
-      addAnotherPlayer.call(this, playerInfo)
+      Player.addAnotherPlayer.call(this, playerInfo)
     })
 
     this.socket.on('disconnect', playerId => {
@@ -122,151 +126,21 @@ class playGame extends Phaser.Scene {
     })
 
     this.socket.on('newDot', dot => {
-      addNewDot.call(this, dot)
+      Experience.addNewDot.call(this, dot)
     })
   }
 
   update () {
-    // Velocity Reset
-    if (this.player != null) {
-      // this.player.body.setVelocity(this.player.body - 10)
-      if (this.player.body.velocity.x > 0) {
-        this.player.body.setVelocityX(
-          Math.max(this.player.body.velocity.x - this.deceleration, 0)
-        )
-      } else if (this.player.body.velocity.x < 0) {
-        this.player.body.setVelocityX(
-          Math.min(this.player.body.velocity.x + this.deceleration, 0)
-        )
-      }
+    Movement.stoppedCheck.call(this)
 
-      if (this.player.body.velocity.y > 0) {
-        this.player.body.setVelocityY(
-          Math.max(this.player.body.velocity.y - this.deceleration, 0)
-        )
-      } else if (this.player.body.velocity.y < 0) {
-        this.player.body.setVelocityY(
-          Math.min(this.player.body.velocity.y + this.deceleration, 0)
-        )
-      }
+    Movement.horizontalMovementCheck.call(this)
 
-      var rad = Phaser.Math.Angle.Between(
-        this.player.x,
-        this.player.y,
-        this.game.input.mousePointer.worldX,
-        this.game.input.mousePointer.worldY
-      )
-      var deg = rad * (180 / Math.PI)
-      rotateTowardsMouse.call(this, deg)
-      updatePlayerName.call(this)
-    }
+    Movement.verticalMovementCheck.call(this)
 
-    // Horizontal movement
-    if (this.aKey.isDown) {
-      this.player.body.setVelocityX(
-        Math.max(
-          this.player.body.velocity.x - this.acceleration,
-          -this.maxSpeed
-        )
-      )
-      sendPlayerMovement.call(this)
-    } else if (this.dKey.isDown) {
-      this.player.body.setVelocityX(
-        Math.min(this.player.body.velocity.x + this.acceleration, this.maxSpeed)
-      )
-      sendPlayerMovement.call(this)
-    }
+    Movement.rotationCheck.call(this)
 
-    // Vertical movement
-    if (this.wKey.isDown) {
-      this.player.body.setVelocityY(
-        Math.max(
-          this.player.body.velocity.y - this.acceleration,
-          -this.maxSpeed
-        )
-      )
-      sendPlayerMovement.call(this)
-    } else if (this.sKey.isDown) {
-      this.player.body.setVelocityY(
-        Math.min(this.player.body.velocity.y + this.acceleration, this.maxSpeed)
-      )
-      sendPlayerMovement.call(this)
-    }
-
-    if (this.cursors.space.isDown) {
-      // addPlayerBullet.call(this, 1)
-    }
+    Movement.shootingCheck.call(this)
   }
-}
-
-function updatePlayerName () {
-  // Update Name Text
-  this.playerChatText.setX(this.player.x - this.playerChatText.width / 2.0)
-  this.playerChatText.setY(this.player.y - 30)
-
-  this.playerNameText.setX(this.player.x - this.playerNameText.width / 2.0)
-  this.playerNameText.setY(this.player.y + 20)
-}
-
-function addAnotherPlayer (playerInfo) {
-  const otherPlayer = this.add.sprite(playerInfo.x, playerInfo.y, 'otherPlayer')
-  otherPlayer.angle = playerInfo.rotation
-  otherPlayer.playerId = playerInfo.playerId
-  this.otherPlayers.add(otherPlayer)
-}
-
-function addPlayer (playerInfo) {
-  this.player = this.physics.add.sprite(playerInfo.x, playerInfo.y, 'player')
-  // this.player.setCollideWorldBounds(true)
-  // Camera Setup
-  var camera = this.cameras.main
-  camera.zoom = 1
-  camera.startFollow(this.player)
-  camera.roundPixels = true
-
-  camera.fadeIn(2000)
-
-  this.player.setOrigin(0.3, 0.5)
-}
-
-function sendPlayerMovement () {
-  updatePlayerName.call(this)
-  this.socket.emit('playerMovement', {
-    x: this.player.x,
-    y: this.player.y,
-    rotation: this.player.angle
-  })
-}
-
-function addNewDot (dot) {
-  var newDot = this.add.sprite(dot.x, dot.y, 'dot')
-  newDot.id = dot.id
-  this.dots.add(newDot)
-
-  // Adds collision between player and dots
-  this.physics.add.collider(this.player, this.dots, (player, dot) => {
-    this.socket.emit('removeDot', dot)
-    dot.destroy()
-  })
-}
-
-function rotateTowardsMouse (deg) {
-  this.player.angle = deg
-  sendPlayerMovement.call(this)
-}
-
-function addPlayerBullet () {
-  var bullet = this.physics.add
-    .sprite(this.player.x, this.player.y, 'playerBullet')
-    .setDepth(-1)
-
-  this.physics.moveTo(
-    bullet,
-    this.game.input.mousePointer.worldX,
-    this.game.input.mousePointer.worldY,
-    null,
-    1000
-  )
 }
 
 export default playGame
