@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
 
-const Player = require('./Player')
+const PlayerManager = require('./PlayerManager')
 
 exports.stoppedCheck = function () {
   if (this.player != null) {
@@ -33,12 +33,12 @@ exports.horizontalMovementCheck = function () {
     this.player.body.setVelocityX(
       Math.max(this.player.body.velocity.x - this.acceleration, -this.maxSpeed)
     )
-    Player.sendPlayerMovement.call(this)
+    PlayerManager.sendPlayerMovement.call(this)
   } else if (this.dKey.isDown) {
     this.player.body.setVelocityX(
       Math.min(this.player.body.velocity.x + this.acceleration, this.maxSpeed)
     )
-    Player.sendPlayerMovement.call(this)
+    PlayerManager.sendPlayerMovement.call(this)
   }
 }
 
@@ -48,12 +48,12 @@ exports.verticalMovementCheck = function () {
     this.player.body.setVelocityY(
       Math.max(this.player.body.velocity.y - this.acceleration, -this.maxSpeed)
     )
-    Player.sendPlayerMovement.call(this)
+    PlayerManager.sendPlayerMovement.call(this)
   } else if (this.sKey.isDown) {
     this.player.body.setVelocityY(
       Math.min(this.player.body.velocity.y + this.acceleration, this.maxSpeed)
     )
-    Player.sendPlayerMovement.call(this)
+    PlayerManager.sendPlayerMovement.call(this)
   }
 }
 
@@ -66,13 +66,13 @@ exports.rotationCheck = function () {
       this.game.input.mousePointer.worldY
     )
     var deg = rad * (180 / Math.PI)
-    Player.rotateTowardsMouse.call(this, deg)
-    Player.updatePlayerName.call(this)
+    PlayerManager.rotateTowardsMouse.call(this, deg)
+    PlayerManager.updatePlayerName.call(this)
   }
 }
 
 exports.shootingCheck = function () {
   if (this.cursors.space.isDown) {
-    // Player.addPlayerBullet.call(this, 1)
+    PlayerManager.addPlayerBullet.call(this, 1)
   }
 }

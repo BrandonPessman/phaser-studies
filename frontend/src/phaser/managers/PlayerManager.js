@@ -43,15 +43,21 @@ exports.addAnotherPlayer = function (playerInfo) {
 }
 
 exports.addPlayerBullet = function () {
-  var bullet = this.physics.add
-    .sprite(this.player.x, this.player.y, 'playerBullet')
-    .setDepth(-1)
+  let currentTime = new Date()
 
-  this.physics.moveTo(
-    bullet,
-    this.game.input.mousePointer.worldX,
-    this.game.input.mousePointer.worldY,
-    null,
-    1000
-  )
+  if (currentTime - this.lastShotTime > this.gunDelay) {
+    var bullet = this.physics.add
+      .sprite(this.player.x, this.player.y, 'playerBullet')
+      .setDepth(-1)
+
+    this.physics.moveTo(
+      bullet,
+      this.game.input.mousePointer.worldX,
+      this.game.input.mousePointer.worldY,
+      null,
+      1000
+    )
+
+    this.lastShotTime = new Date()
+  }
 }
