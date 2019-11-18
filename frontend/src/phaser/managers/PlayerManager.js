@@ -9,7 +9,7 @@ exports.addPlayer = function (playerInfo) {
 
   camera.fadeIn(2000)
 
-  this.player.setOrigin(0.3, 0.5)
+  this.player.setOrigin(0.5, 0.5)
 }
 
 exports.sendPlayerMovement = function () {
@@ -32,7 +32,7 @@ exports.updatePlayerName = function () {
   this.playerChatText.setY(this.player.y - 30)
 
   this.playerNameText.setX(this.player.x - this.playerNameText.width / 2.0)
-  this.playerNameText.setY(this.player.y + 20)
+  this.playerNameText.setY(this.player.y - 70)
 }
 
 exports.addAnotherPlayer = function (playerInfo) {

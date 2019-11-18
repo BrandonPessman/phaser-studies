@@ -5,8 +5,8 @@ const PlayerManager = require('./PlayerManager')
 
 exports.setup = function () {
   // Connecting the socket
-  // this.socket = io('http://165.227.115.42:3000/')
-  this.socket = io('localhost:3000')
+   this.socket = io('http://165.227.115.42:3000/')
+  //this.socket = io('localhost:3000')
 
   // Player Setup
   this.socket.on('currentPlayers', players => {

@@ -1,4 +1,4 @@
-import playerImage from '../../assets/sprites/player.png'
+import playerImage from '../../assets/sprites/test.png'
 import otherPlayerImage from '../../assets/sprites/enemy.png'
 import dotImage from '../../assets/sprites/square_point.png'
 import mappyData from '../../assets/tiled/map.json'
